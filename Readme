@@ -1,0 +1,6 @@
+sudo npm -gi nodemon
+npm init -y
+npx npm i express socket.io
+npm start -- inicia a aplicacao
+nodemon app -- starta a aplicacao
+jquery, socket io, express

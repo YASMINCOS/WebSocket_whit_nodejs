@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat WebSocket</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"
+        integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <div class="chat-container">
+        <ul id="mensagens"></ul>
+
+        <div id="status"></div>
+
+        <form id="nickname-form" style="display: none;">
+            <input type="text" id="nickname-input" placeholder="Digite seu nickname">
+            <button type="submit">Entrar</button>
+        </form>
+
+        <form class="message-input" style="display: none;">
+            <div>
+                <input type="text" id="msg" autofocus autocomplete="off" placeholder="Digite uma mensagem ou um emoji">
+                <button type="submit">Enviar</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        $(function () {
+            const socket = io()
+            let nicknameSet = false;
+
+            // Mostrar diálogo para inserir o nickname
+            $('#nickname-form').show();
+
+            $('#nickname-form').submit(function (evt) {
+                evt.preventDefault();
+                const nickname = $('#nickname-input').val().trim();
+                if (nickname !== '') {
+                    socket.nickname = nickname;
+                    socket.emit('login', nickname);
+                    $('#nickname-form').hide();
+                    $('.message-input').show();
+                    nicknameSet = true;
+                }
+            });
+
+            $('.message-input').submit(function (evt) {
+                evt.preventDefault();
+
+                if (nicknameSet) {
+                    if ($('#msg').val().trim() !== '') {
+                        socket.emit('chat msg', $('#msg').val());
+                    }
+                    $('#msg').val('');
+                }
+
+                return false;
+            });
+
+            // Receber mensagem do servidor
+            socket.on('chat msg', function (data) {
+                const message = data.message;
+                const sender = data.sender;
+
+                const messageClass = sender === socket.nickname ? 'sent' : 'received';
+                const messageHtml = `<li class="message ${messageClass}">
+                    <div class="message-content">
+                        <span class="sender">${sender}</span>
+                        <p>${message}</p>
+                    </div>
+                </li>`;
+
+                $('#mensagens').append(messageHtml);
+            });
+
+            // Receber mensagem do servidor
+            socket.on('status', function (msg) {
+                $('#status').html(msg);
+            });
+
+        })   
+    </script>
+    
+</body>
+
+</html>
